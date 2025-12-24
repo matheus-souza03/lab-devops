@@ -1,0 +1,14 @@
+Necessário:
+ - AWS CLI instalada e configurada, com conta criada na aws
+ - Docker instalado
+
+Nginx:
+  É o servidor web mais popular da atualidade. 
+  Tem capacidade de atuar como proxy reverso (redireceona o tráfego para servidores de back-end), 
+  balanceador de carga (distribui o trafego entre varios servidores para melhorar a escalabilidade) 
+  e servidor de conteúdo estático.
+  Pode lidar com milhares de acessos simultaneos otimizando recursos.
+  Tem suporte a WebSockets (mantém conexões abertas entre cliente e servidor).
+  TLS/SSL (oferece segurança ao trafego web com criptografia)
+  Suporte a IPV6.
+  Mais leve e eficiente que o apache.
