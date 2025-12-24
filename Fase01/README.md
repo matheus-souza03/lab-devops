@@ -1,195 +1,188 @@
-#lab-devops
-##📌 Visão Geral
+# lab-devops
 
-Este repositório contém um laboratório prático de DevOps, com o objetivo de consolidar conhecimentos em Docker e AWS, realizando o deploy de um site estático em nuvem.
+Laboratório para praticar ferramentas e fluxos de DevOps — objetivo principal: aprendizado e experimentação. Neste projeto demonstramos o empacotamento de um site estático em Docker, push da imagem para o Amazon ECR e execução da imagem em uma instância EC2.
 
-O projeto abrange todo o fluxo de:
+Badges:
 
-Criação de imagem Docker
+- Build: ![build](https://img.shields.io/badge/build-experimental-orange)
+- Docker: ![docker](https://img.shields.io/badge/docker-ready-blue)
+- AWS: ![aws](https://img.shields.io/badge/aws-demo-orange)
+- License: ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
-Armazenamento da imagem no Amazon ECR
+---
 
-Provisionamento de uma instância EC2
+## Índice
 
-Deploy do container na nuvem
+- [Resumo](#resumo)
+- [Arquitetura](#arquitetura)
+- [Tecnologias](#tecnologias)
+- [Pré-requisitos](#pré-requisitos)
+- [Build da imagem Docker](#build-da-imagem-docker)
+- [Publicar imagem no Amazon ECR](#publicar-imagem-no-amazon-ecr)
+- [Executar imagem em EC2](#executar-imagem-em-ec2)
+- [Comandos úteis](#comandos-úteis)
+- [Como funciona (detalhes técnicos)](#como-funciona-detalhes-técnicos)
+- [Limpeza / Remoção](#limpeza--remoção)
+- [Problemas conhecidos e solução de problemas](#problemas-conhecidos-e-solução-de-problemas)
+- [Segurança / Boas práticas](#segurança--boas-práticas)
+- [Licença](#licença)
+- [Contato](#contato)
 
-⚠️ Projeto desenvolvido exclusivamente para fins de aprendizado e prática.
+---
 
-##🛠️ Tecnologias Utilizadas
+## Resumo
 
-Docker
+Este repositório demonstra um fluxo simples de implantação de um site estático:
 
-AWS EC2
+1. Empacotar o site em uma imagem Docker;
+2. Publicar a imagem em um repositório privado no Amazon ECR;
+3. Executar a imagem em uma instância EC2.
 
-AWS ECR
+O objetivo é ensinar os passos e comandos necessários para esse fluxo, com foco em praticar conceitos de containerização, registro de imagens e permissões AWS.
 
-AWS IAM
+## Arquitetura
 
-Linux (Amazon Linux)
+Fluxo resumido:
 
-SSH
+- Criar imagem Docker localmente.
+- Imagem é taggeada e enviada (push) para Amazon ECR (repositório privado).
+- Instância EC2 (com permissão adequada) puxa (pull) a imagem do ECR e executa o container.
+- Tráfego HTTP é servido pelo container na porta 80 (mapeada para a porta pública desejada da EC2).
 
-📂 Estrutura do Projeto
-Fase01/
-├── website/
-│ └── arquivos do site estático
-├── Dockerfile
-└── README.md
+## Tecnologias
 
-##🚀 Passo 1 – Criar a imagem Docker e enviar para o Amazon ECR
-1️⃣ Criar a imagem Docker
+- Docker (construção e execução de containers)
+- AWS ECR (Elastic Container Registry) — repositório de imagens
+- AWS EC2 — instância para executar containers
+- AWS IAM — controle de permissões (role com política `AmazonEC2ContainerRegistryReadOnly`)
+- Shell / AWS CLI
 
-Após clonar o repositório, o primeiro passo é empacotar a aplicação, criando uma imagem Docker.
+## Pré-requisitos
 
-Crie o Dockerfile contendo as instruções para o ambiente da aplicação e execute:
+- Conta AWS com permissões para criar ECR, EC2 e IAM roles (ou autorização para pedir a um administrador).
+- AWS CLI configurada (aws configure) com credenciais e região.
+- Docker instalado localmente para build/push.
 
-docker build -t meu-site:v1.0 .
+## Build da imagem Docker
 
-Parâmetros:
+1. Crie um arquivo `Dockerfile` (exemplo simples para site estático usando nginx):
+   ```dockerfile
+   FROM nginx:stable-alpine
+   COPY ./website /usr/share/nginx/html:ro
+   EXPOSE 80
+   ```
+2. Construir a imagem:
+   docker build -t meu-site:v1.0 .
+   - `meu-site` = nome da imagem local
+   - `v1.0` = tag/versão
+3. Testar localmente:
+   docker run -d -p 3000:80 --name meu-site-test meu-site:v1.0
+   - Acesse http://localhost:3000 para validar.
 
-meu-site: nome da imagem
+## Publicar imagem no Amazon ECR
 
-v1.0: versão da imagem
+Observação: substitua os placeholders abaixo pelos valores do seu ambiente.
 
-.: diretório onde está o Dockerfile
+1. Criar um repositório no ECR (pelo Console AWS ou CLI):
+   aws ecr create-repository --repository-name site-prod --region <AWS_REGION>
 
-📌 Uma imagem representa a aplicação empacotada, permitindo a execução de múltiplos containers a partir dela.
+2. Fazer login no ECR (na região correta):
+   aws ecr get-login-password --region <AWS_REGION> | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com
 
-2️⃣ Executar o container localmente (opcional)
-docker run -d -p 3000:80 --name nome_container meu-site:v1.0
+3. Taggar a imagem local para apontar ao ECR:
+   docker tag meu-site:v1.0 <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/site-prod:v1.0
 
-Explicação dos parâmetros:
+4. Push da imagem:
+   docker push <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/site-prod:v1.0
 
--d: executa em segundo plano
+Observação de segurança: substitua `<AWS_ACCOUNT_ID>`, `<AWS_REGION>` e `<TAG>` pelos valores apropriados. Não suba credenciais em texto plano no repositório; use o AWS CLI configurado localmente ou CI com secrets.
 
--p 3000:80: mapeia a porta 3000 do host para a porta 80 do container
+## Executar imagem em EC2
 
---name: nome do container
+Resumo dos passos para executar a imagem ECR numa instância EC2:
 
-Verifique se o container está em execução:
+1. Criar instância EC2
 
-docker ps
+   - Tipo sugerido para testes: `t3.micro`.
+   - Escolha a AMI compatível (ex.: Amazon Linux 2).
+   - Criar/associar um par de chaves SSH (arquivo `.pem`).
 
-3️⃣ Criar um repositório no Amazon ECR
+2. Acessar via SSH (exemplo):
+   chmod 400 <PATH_TO_KEY>.pem
+   ssh -i "<PATH_TO_KEY>.pem" <EC2_USER>@<EC2_PUBLIC_IP>
 
-Crie um repositório no Amazon ECR via AWS Console.
+   - Substitua `<EC2_USER>` (ex.: `ec2-user`, `ubuntu`) e `<EC2_PUBLIC_IP>`.
 
-Após a criação, faça login no ECR utilizando a AWS CLI:
+3. Instalar e iniciar Docker (Amazon Linux 2 exemplo):
+   sudo yum update -y
+   sudo yum install -y docker
+   sudo systemctl start docker
+   sudo usermod -aG docker $(whoami)
 
-aws ecr get-login-password --region REGIAO_DO_ECR \
-| docker login --username AWS --password-stdin ID_USUARIO.dkr.ecr.REGIAO_DO_ECR.amazonaws.com
+   # Efetue logout/login para que as permissões do grupo docker sejam aplicadas.
 
-⚠️ Certifique-se de estar autenticado na mesma região onde o ECR foi criado.
+4. Conceder à EC2 permissão para acessar o ECR
 
-4️⃣ Criar a tag da imagem para o ECR
+   - Crie uma IAM Role com a política gerenciada `AmazonEC2ContainerRegistryReadOnly`.
+   - Anexe essa Role à instância EC2 (Actions → Security → Modify IAM role).
+   - Isso permite que a instância faça `docker pull` de repositórios privados ECR sem inserir credenciais estáticas.
 
-A tag representa uma cópia da imagem local que será enviada ao ECR.
+5. No EC2, autenticar no ECR
+   aws ecr get-login-password --region <AWS_REGION> | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com
 
-docker tag meu-site:v1.0 339495469954.dkr.ecr.us-east-2.amazonaws.com/site-prod:v1.0
+6. Pull e execução:
+   docker pull <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/site-prod:v1.0
+   docker run --name site -d -p 80:80 <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/site-prod:v1.0
 
-Parâmetros:
+7. Acesse o site apontando para o IP público da EC2 (ex.: http://<EC2_PUBLIC_IP>/).
 
-339495469954: ID da conta AWS
+## Comandos úteis
 
-us-east-2: região do ECR
+- Listar containers: docker ps
+- Ver logs: docker logs -f <container_id_or_name>
+- Parar container: docker stop <container>
+- Remover container: docker rm <container>
+- Remover imagem local: docker rmi <image>
+- Listar imagens: docker images
+- Fazer login ECR: aws ecr get-login-password --region <REGION> | docker login --username AWS --password-stdin <ACCOUNT>.dkr.ecr.<REGION>.amazonaws.com
+- Criar repositório ECR: aws ecr create-repository --repository-name <name> --region <region>
 
-site-prod: nome do repositório no ECR
+## Como funciona (detalhes técnicos)
 
-v1.0: versão da imagem
+- Dockerfile: empacota conteúdos estáticos (HTML/CSS/JS) em uma imagem baseada em nginx, expondo porta 80.
+- Tagging: criar uma tag com o endpoint do ECR permite push/pull entre Docker local e ECR.
+- IAM Role para EC2: evita uso de credenciais estáticas na instância; privilegia o uso de identidade associada à instância.
 
-5️⃣ Enviar a imagem para o ECR
-docker push 339495469954.dkr.ecr.us-east-2.amazonaws.com/site-prod:v1.0
+## Limpeza / Remoção
 
-##☁️ Passo 2 – Deploy da imagem em uma instância EC2
-1️⃣ Criar a instância EC2
+- Remover containers e imagens da EC2:
+  docker stop site
+  docker rm site
+  docker rmi <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/site-prod:v1.0
+- Remover repositório ECR
+  aws ecr delete-repository --repository-name site-prod --force --region <AWS_REGION>
 
-No AWS Console:
+## Problemas conhecidos e solução de problemas
 
-Acesse EC2
+- Erro ao executar `docker login`/`docker pull` do ECR:
+  - Verifique se `aws configure` está com credenciais e região corretas.
+  - Se a EC2 usa IAM Role, confirme que a Role está anexada e contém `AmazonEC2ContainerRegistryReadOnly`.
+- Permissão SSH: se ao tentar conectar ocorrer erro de permissão no arquivo `.pem`, rode `chmod 400 <PATH_TO_KEY>.pem`.
+- Permissões docker na EC2: se precisar do usuário não-root executar docker, adicione-o ao grupo docker e faça logout/login.
+- Erro 403/403 Forbidden ao acessar conteúdo servido: verifique se o container está rodando e o mapeamento de portas (host:container) está correto.
 
-Crie uma nova instância
+## Segurança / Boas práticas
 
-Selecione o sistema operacional
+- Nunca commit credenciais (AWS keys, .pem, tokens) no repositório.
+- Use IAM roles para instâncias EC2 em vez de chaves embutidas.
+- Bloqueie o acesso SSH por IP (security groups), use bastion/Jumphost ou Session Manager para acessos administrativos.
+- Para produção, utilize balanceadores (ALB), HTTPS (TLS) e mecanismos de auto-scaling e monitoração.
 
-Escolha o tipo t3.micro (Free Tier)
+## Licença
 
-Crie ou selecione uma chave SSH
+Licença MIT — ver arquivo LICENSE.
 
-Configure as regras de rede (porta 22 e 80 liberadas)
+## Contato
 
-2️⃣ Acessar a instância via SSH
-
-Antes de conectar, ajuste a permissão da chave SSH:
-
-chmod 400 nome_arquivo_com_chave_ssh
-
-Conecte-se à instância:
-
-ssh -i nome_arquivo_com_chave_ssh usuario@ip_publico
-
-3️⃣ Atualizar o sistema e instalar o Docker
-sudo yum update -y
-sudo yum install docker -y
-sudo systemctl start docker
-
-Adicione o usuário ao grupo Docker:
-
-sudo usermod -a -G docker usuario
-
-⚠️ Saia e entre novamente na instância para aplicar as permissões.
-
-4️⃣ Permitir acesso da EC2 ao ECR (IAM Role)
-
-Como o ECR é privado, é necessário conceder permissão à EC2.
-
-Crie uma IAM Role com a política:
-
-AmazonEC2ContainerRegistryReadOnly
-
-Associe a Role à instância EC2:
-
-Selecione a instância
-
-Ações → Segurança
-
-Modificar função do IAM
-
-Selecione a Role criada
-
-5️⃣ Fazer pull da imagem e executar o container
-
-Faça o pull da imagem do ECR:
-
-docker pull URL_IMAGEM/site:versao
-
-Execute o container:
-
-docker run -d --name site -p 80:80 URL_IMAGEM/site:versao
-
-##✅ Resultado Final
-
-O site estático estará disponível publicamente através do IP público da instância EC2, na porta 80.
-
-##📚 Objetivo do Projeto
-
-Praticar Docker na criação de imagens
-
-Trabalhar com ECR e EC2 na AWS
-
-Entender controle de permissões com IAM
-
-Simular um fluxo real de deploy em nuvem
-
-Se quiser, posso:
-
-Adaptar o README para inglês
-
-Criar uma arquitetura em diagrama
-
-Ajustar para um padrão mais corporativo (ex: CI/CD, Terraform)
-
-Deixar no formato ideal para recrutadores DevOps
-
-Só me dizer 👍
-
-O ChatGPT pode cometer erros. Confira informações importantes. Consulte as Preferências de cookies.
+- Mantainer: matheus-souza03 (GitHub)
+- Para dúvidas ou correções: abra uma issue neste repositório.
