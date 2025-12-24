@@ -8,9 +8,7 @@ Este projeto é desenvolvido de acordo com o guia x
 
 Após clonar o repositório onde o site está hospedado, iremos "empacotar" os arquivos do site, ou seja, criar uma imagem para essa aplicação
 
-Primeiramente, criaremos o dockerfile. Que será o arquivo onde estará todas as instruções para a criação do ambiente onde a aplicação irá rodar. Assim estará criaa a imagem
-
-Para subir a imagem rodei o seguinte comando:
+Primeiramente, criaremos o dockerfile. Que será o arquivo onde estará todas as instruções para a criação do ambiente onde a aplicação irá rodar. Assim criaremos a imagem com o seguinte comando
 
 docker build -t meu-site:v1.0 .
 
