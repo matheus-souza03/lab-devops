@@ -1,4 +1,4 @@
-# lab-devops
+# lab-devops Fase01 - Docker e AWS
 
 Laboratório para praticar ferramentas e fluxos de DevOps — objetivo principal: aprendizado e experimentação. Neste projeto demonstramos o empacotamento de um site estático em Docker, push da imagem para o Amazon ECR e execução da imagem em uma instância EC2.
 
