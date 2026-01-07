@@ -6,6 +6,8 @@ Este repositório contém as fases do projeto relacionadas ao deploy de um site 
 
 - [Fase01](#fase01) — Projeto inicial
 - [Fase02](#fase02) — Automação com Terraform
+- [Licença](#licença)
+- [Contato](#contato)
 
 ---
 
@@ -34,3 +36,11 @@ Este repositório contém as fases do projeto relacionadas ao deploy de um site 
 - Tecnologias: Terraform, AWS, Docker, módulos Terraform para recursos reutilizáveis.
 
 ---
+
+## Licença
+
+Licença MIT — ver arquivo LICENSE.
+
+## Contato
+
+- Mantainer: matheus-souza03 (GitHub)

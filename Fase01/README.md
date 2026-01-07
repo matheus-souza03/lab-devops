@@ -25,8 +25,6 @@ Badges:
 - [Limpeza / Remoção](#limpeza--remoção)
 - [Problemas conhecidos e solução de problemas](#problemas-conhecidos-e-solução-de-problemas)
 - [Segurança / Boas práticas](#segurança--boas-práticas)
-- [Licença](#licença)
-- [Contato](#contato)
 
 ---
 
@@ -175,14 +173,4 @@ Resumo dos passos para executar a imagem ECR numa instância EC2:
 
 - Nunca commit credenciais (AWS keys, .pem, tokens) no repositório.
 - Use IAM roles para instâncias EC2 em vez de chaves embutidas.
-- Bloqueie o acesso SSH por IP (security groups), use bastion/Jumphost ou Session Manager para acessos administrativos.
-- Para produção, utilize balanceadores (ALB), HTTPS (TLS) e mecanismos de auto-scaling e monitoração.
-
-## Licença
-
-Licença MIT — ver arquivo LICENSE.
-
-## Contato
-
-- Mantainer: matheus-souza03 (GitHub)
-- Para dúvidas ou correções: abra uma issue neste repositório.
+- Para produção, utilize balanceadores (ALB), HTTPS (TLS) e mecanismos de auto-scaling.
