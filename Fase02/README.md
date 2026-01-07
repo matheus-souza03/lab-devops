@@ -37,7 +37,7 @@ ecr.tf e ec2.tf são os arquivos que criam e configuram, respectivamente, as ins
 Deve estar com a AWS CLI já configurada na máquina local e com as credenciais configuradas.
 E também com o Terraform instalado.
 
-# Com isso pronto é só seguir os seguintes passos:
+Com isso pronto é só seguir os seguintes passos:
 
 ```
 - terraform init // Para inicializar o backend
