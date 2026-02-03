@@ -28,7 +28,7 @@ Este repositório contém as fases do projeto relacionadas ao deploy de um site 
 
 - Pasta: `Fase02`
 - Descrição: Continuação do projeto, utilizando Terraform para automatizar o deploy na AWS.
-- Status: 🚧 Em andamento / Automatização com Terraform
+- Status: ✅ Concluído
 
 ### Detalhes
 

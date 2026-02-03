@@ -109,9 +109,9 @@ Resumo dos passos para executar a imagem ECR numa instância EC2:
    chmod 400 <PATH_TO_KEY>.pem
    ssh -i "<PATH_TO_KEY>.pem" <EC2_USER>@<EC2_PUBLIC_IP>
 
-   - Substitua `<EC2_USER>` (ex.: `ec2-user`, `ubuntu`) e `<EC2_PUBLIC_IP>`.
+   - Substitua `<EC2_USER>` (ex.: `ec2-user`, `ubuntu`) e `<EC2_PUBLIC_IP>` pelo IP da instância ec2.
 
-3. Instalar e iniciar Docker (Amazon Linux 2 exemplo):
+3. Instalar e iniciar Docker na instância ec2 (Amazon Linux 2 exemplo):
    sudo yum update -y
    sudo yum install -y docker
    sudo systemctl start docker
